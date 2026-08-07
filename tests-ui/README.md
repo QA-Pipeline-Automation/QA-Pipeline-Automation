@@ -111,7 +111,7 @@ Une fois l'exécution terminée, le rapport visuel est généré dans le dossier
 Pour l'ouvrir :
 
 ```bash
-npm run cypress:open
+start cypress/reports/report.html
 ```
 
 Le rapport synthétise :
