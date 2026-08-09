@@ -1,6 +1,6 @@
 # Documentation Jenkins — Sprint 1
 
-## Étape 1 : Mettre à jour `docker-compose.yml` et lancer Jenkins
+## Étape 1 :  Mettre à jour `docker-compose.yml` et lancer Jenkins
 
 ### 1. Ajout d'un réseau de type `bridge network` pour tous les services
 
