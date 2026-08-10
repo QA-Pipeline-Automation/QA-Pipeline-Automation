@@ -1,0 +1,81 @@
+{
+  "name": "Newman - Juice Shop Tests",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "96c332a9-b511-4523-8c55-cbf05a3edfd3",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "command": "cd /tests-api && NODE_NO_WARNINGS=1 /home/node/.npm-global/bin/newman run \"API Tests.postman_collection.json\" -e \"Dev - Juice Shop.postman_environment.json\" --env-var baseUrl=http://host.docker.internal:3000 --reporters json --reporter-json-export /tmp/results.json > /dev/null 2>&1 ; cat /tmp/results.json"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -48
+      ],
+      "id": "1c4f49de-947f-42d5-b597-24fa994e11e9",
+      "name": "Execute Command",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// On récupère le texte stdout généré par Newman\nconst output = $input.first().json.stdout;\n\n// On parse la chaîne JSON\nconst report = JSON.parse(output);\n\nconst assertions = report.run.stats.assertions;\nconst requests = report.run.stats.requests;\n\nreturn {\n  json: {\n    status: assertions.failed === 0 ? \"PASSED\" : \"FAILED\",\n    totalAssertions: assertions.total,\n    failedAssertions: assertions.failed,\n    passedAssertions: assertions.total - assertions.failed,\n    totalRequests: requests.total,\n    failedRequests: requests.failed,\n    durationMs: report.run.timings.completed - report.run.timings.started\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        -160
+      ],
+      "id": "9bbd2a00-9fce-4c6d-a82a-3536ad40bb1c",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "8b5a778d-4f75-434a-ba7c-67810d9c4d36",
+  "meta": {
+    "instanceId": "1c87358951f08b959234fe518c644e6923cdacf0693aae77cf049564a6187677"
+  },
+  "nodeGroups": [],
+  "id": "kYF2VV1o462zLfYS",
+  "tags": []
+}

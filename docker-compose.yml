@@ -19,15 +19,20 @@ services:
 
   n8n:
     image: n8nio/n8n:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "5678:5678"
     volumes:
       - ./n8n_data:/home/node/.n8n
+      - ./tests-api:/tests-api
+      - ./n8n_npm_global:/home/node/.npm-global
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=admin
       - N8N_BASIC_AUTH_PASSWORD=admin123
       - GENERIC_TIMEZONE=Africa/Casablanca
+      - NODES_EXCLUDE=[]
     networks:
       - qa_network
 
