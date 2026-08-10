@@ -1,0 +1,517 @@
+{
+  "name": "pipeline-start",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pipeline-start",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d981322b-28e2-4dfb-80f3-f58e8eef4169",
+      "name": "Webhook",
+      "webhookId": "1d242add-bfb7-4e92-b7f5-410e84eb5bb7"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://jenkins:8080/job/QA-PAutomation-n8n/build",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c00cbfc8-7e9b-47de-8d81-33d0aee33820",
+      "name": "Start Jenkins Build"
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "503999a1-b9ae-4e9d-8a00-dd8a290b504d",
+      "name": "Wait for Build",
+      "webhookId": "b9a22dc4-3632-4de4-9cd1-0b28b710d4aa"
+    },
+    {
+      "parameters": {
+        "url": "http://jenkins:8080/lastBuild/api/json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "02a57ac3-56e2-4f53-a517-75be155b4feb",
+      "name": "Check Build Status"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a5f8fc78-c9b5-4274-9072-e61896e0b207",
+              "leftValue": "={{ $json.result }}",
+              "rightValue": "SUCCESS",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        0
+      ],
+      "id": "bcbc2a3d-4300-43d1-9122-5833d36033d2",
+      "name": "Build Success?"
+    },
+    {
+      "parameters": {
+        "resource": "channelMessage",
+        "teamId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "message": "Le build Jenkins a échoué",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        96
+      ],
+      "id": "ce8ddcbd-e695-4f53-b0ff-4728314df67b",
+      "name": "Notify Build Failed",
+      "webhookId": "7f09c50d-a531-4c60-92db-958bef76b1f7"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://runner-api:5000/newman/run",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        -96
+      ],
+      "id": "ae6a33df-adbb-4b5a-922f-f0d6417258bc",
+      "name": "Run Newman Tests"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://runner-api:5000/cypress/run",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1344,
+        -96
+      ],
+      "id": "27ae090d-c90d-41f3-9b4f-db78d0da33a1",
+      "name": "Run Cypress Tests"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e180246d-926c-4d04-a20d-59e0a96a49de",
+              "leftValue": "={{ $json.exitCode }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        -96
+      ],
+      "id": "22d5f8d9-0a19-46a6-b72a-b31f3cb2b58e",
+      "name": "Tests OK?"
+    },
+    {
+      "parameters": {
+        "resource": "conversation",
+        "messages": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1792,
+        0
+      ],
+      "id": "0edb3ba2-fbb0-4354-abaa-c0715f23b5a1",
+      "name": "Analyze Logs (AI)"
+    },
+    {
+      "parameters": {
+        "resource": "channelMessage",
+        "teamId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        0
+      ],
+      "id": "1d226cfc-c439-4f08-beae-57147f874127",
+      "name": "Notify Failure with AI Summary",
+      "webhookId": "90c52de4-baf2-4370-9a00-fadd5df0de45"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "test_results",
+          "mode": "list",
+          "cachedResultName": "test_results"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "total_tests": 0,
+            "passed": 0,
+            "failed": 0,
+            "skipped": 0,
+            "duration_seconds": 0
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "run_id",
+              "displayName": "run_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "spec_name",
+              "displayName": "spec_name",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total_tests",
+              "displayName": "total_tests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "passed",
+              "displayName": "passed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "failed",
+              "displayName": "failed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "skipped",
+              "displayName": "skipped",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "duration_seconds",
+              "displayName": "duration_seconds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1792,
+        -192
+      ],
+      "id": "25047c3a-4e22-434d-999c-35f3a4f8d269",
+      "name": "Store Results in DB",
+      "credentials": {
+        "postgres": {
+          "id": "iLkiBThnaDBByNPl",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "channelMessage",
+        "teamId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        -192
+      ],
+      "id": "98cfb834-011b-41bf-a2a3-652d02b22d24",
+      "name": "Notify Success",
+      "webhookId": "d30b1c57-03ae-4860-9ac6-922b3a190f3f"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Start Jenkins Build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Jenkins Build": {
+      "main": [
+        [
+          {
+            "node": "Wait for Build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Build": {
+      "main": [
+        [
+          {
+            "node": "Check Build Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Build Status": {
+      "main": [
+        [
+          {
+            "node": "Build Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Success?": {
+      "main": [
+        [
+          {
+            "node": "Run Newman Tests",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Build Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Newman Tests": {
+      "main": [
+        [
+          {
+            "node": "Run Cypress Tests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Cypress Tests": {
+      "main": [
+        [
+          {
+            "node": "Tests OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tests OK?": {
+      "main": [
+        [
+          {
+            "node": "Store Results in DB",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Analyze Logs (AI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Logs (AI)": {
+      "main": [
+        [
+          {
+            "node": "Notify Failure with AI Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Results in DB": {
+      "main": [
+        [
+          {
+            "node": "Notify Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "37539501-c223-4421-93a1-f169c5f7b186",
+  "meta": {
+    "instanceId": "7f102619c3a859f89ae30d98f23dd16e938dc6ca78c529bfde7daf2f86846465"
+  },
+  "nodeGroups": [],
+  "id": "fgnMu64Yqn9WEx6L",
+  "tags": []
+}
