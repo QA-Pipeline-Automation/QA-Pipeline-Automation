@@ -1,0 +1,538 @@
+{
+  "info": {
+    "_postman_id": "165dc078-8d52-44fe-aedb-f67b5b724be0",
+    "name": "API Tests",
+    "description": "Cette collection teste les endpoints REST critiques de l'application OWASP Juice Shop (application volontairement vulnérable utilisée pour l'apprentissage de la sécurité web).\n\nObjectif : valider le comportement des fonctionnalités principales — authentification, gestion du panier, recherche de produits, et création de commandes.\n\nStructure :\n\n- 11 requêtes couvrant : Login, Register, Search product, Get product detail, Get/Add/Update/Delete basket, Get non-existent product (404), Create order (B2B), Get user whoami\n    \n- Authentification gérée via JWT, capturé automatiquement au login et réutilisé via la variable {{token}}\n    \n- Deux environnements disponibles : Dev (local) et Test\n    \n\nEnvironnements requis : sélectionner \"Dev - Juice Shop\" ou \"Test - Juice Shop\" avant l'exécution.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52033155"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.environment.set(\"token\", pm.response.json().authentication.token);\r",
+              "\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response has a token\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.authentication.token).to.be.a('string');\r",
+              "    pm.expect(jsonData.authentication.token).to.include('eyJ');\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is acceptable\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"admin@juice-sh.op\",\r\n  \"password\": \"admin123\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rest/user/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "rest",
+            "user",
+            "login"
+          ]
+        },
+        "description": "StartFragmentAuthentifie un utilisateur avec email/password. Capture automatiquement le JWT retourné dans la variable `{{token}}` via un script post-response. Réponse attendue : 200 OK.EndFragment"
+      },
+      "response": []
+    },
+    {
+      "name": "Register user",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 or 201\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/Users/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "Users",
+            ""
+          ]
+        },
+        "description": "StartFragmentCrée un nouveau compte utilisateur. Réponse attendue : 200/201 avec les infos du compte créé.EndFragment"
+      },
+      "response": []
+    },
+    {
+      "name": "Create order (B2B)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 or 201\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"cid\": \"C1\",\r\n  \"orderLines\": [\r\n    {\r\n      \"productId\": 12,\r\n      \"quantity\": 10000,\r\n      \"customerReference\": \"PO00000001.2\"\r\n    }\r\n  ]\r\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/b2b/v2/orders",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "b2b",
+            "v2",
+            "orders"
+          ]
+        },
+        "description": "StartFragmentCrée une commande à partir du panier de l'utilisateur authentifié. Nécessite `{{token}}`. Réponse attendue : 200/201 avec confirmation de commande.EndFragment"
+      },
+      "response": []
+    },
+    {
+      "name": "Search product",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response is an array of products\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.data).to.be.an('array');\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/rest/products/search?q=apple",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "rest",
+            "products",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "q",
+              "value": "apple"
+            }
+          ]
+        },
+        "description": "StartFragmentRecherche des produits par mot-clé. Endpoint public, pas d'authentification requise. Réponse attendue : 200 OK avec liste de produits.EndFragment"
+      },
+      "response": []
+    },
+    {
+      "name": "Get product detail",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Product has a name\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.data.name).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/Products/14",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "Products",
+            "14"
+          ]
+        },
+        "description": "StartFragmentRécupère les détails d'un produit via son ID. Réponse attendue : 200 OK, ou 404 si l'ID n'existe pas.EndFragment"
+      },
+      "response": []
+    },
+    {
+      "name": "Get basket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Basket belongs to authenticated user\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.data.UserId).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/rest/basket/1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "rest",
+            "basket",
+            "1"
+          ]
+        },
+        "description": "StartFragmentRécupère le contenu du panier de l'utilisateur authentifié. Nécessite `{{token}}`. Réponse attendue : 200 OK avec la liste des produits du panier.EndFragment"
+      },
+      "response": []
+    },
+    {
+      "name": "Add item to basket",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200 || pm.response.code === 201) {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.environment.set(\"basketItemId\", jsonData.data.id);\r",
+              "}\r",
+              "\r",
+              "pm.test(\"Status code is 200 or 201\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const randomProductId = Math.floor(Math.random() * 20) + 1; // ID entre 1 et 20\r",
+              "pm.environment.set(\"randomProductId\", randomProductId);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"ProductId\": {{randomProductId}},\r\n  \"BasketId\": 1,\r\n  \"quantity\": 2\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/BasketItems/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "BasketItems",
+            ""
+          ]
+        },
+        "description": "StartFragmentAjoute un produit au panier. Nécessite `{{token}}`, un `ProductId` et `BasketId` valides (en nombre, pas en texte). Réponse attendue : 200/201.EndFragment"
+      },
+      "response": []
+    },
+    {
+      "name": "Update basket item",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"quantity\":3}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/BasketItems/{{basketItemId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "BasketItems",
+            "{{basketItemId}}"
+          ]
+        },
+        "description": "StartFragmentModifie la quantité d'un item déjà présent dans le panier, via son ID. Nécessite `{{token}}`. Réponse attendue : 200 OK.EndFragment"
+      },
+      "response": []
+    },
+    {
+      "name": "Delete basket item",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 or 204\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/BasketItems/{{basketItemId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "BasketItems",
+            "{{basketItemId}}"
+          ]
+        },
+        "description": "StartFragmentSupprime un item du panier via son ID. Nécessite `{{token}}`. Réponse attendue : 200/204.EndFragment"
+      },
+      "response": []
+    },
+    {
+      "name": "Get non-existent product (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 404\", function () {\r",
+              "    pm.response.to.have.status(404);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/Products/9999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "Products",
+            "9999"
+          ]
+        },
+        "description": "StartFragmentTest négatif : vérifie que l'API renvoie bien une 404 propre pour un ID de produit inexistant.EndFragment"
+      },
+      "response": []
+    },
+    {
+      "name": "Get user whoami",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "pm.test(\"Response has expected structure\", function () {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.user).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/rest/user/whoami",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "rest",
+            "user",
+            "whoami"
+          ]
+        },
+        "description": "StartFragmentRécupère les informations de l'utilisateur actuellement authentifié (id, email...). Nécessite `{{token}}`. Réponse attendue : 200 OK.EndFragment"
+      },
+      "response": []
+    }
+  ]
+}
