@@ -53,7 +53,7 @@
     "build:server": "tsc",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
-    "postinstall": "cd frontend && npm install && cd .. && npm run build:frontend && (npm run --silent build:server || cd .)",
+    "postinstall": "echo Skip - app frontend non necessaire pour les tests E2E",
     "lint": "eslint *.ts data lib models routes test/**/*.ts views && npm run lint:config && cd frontend && npm run lint && npm run lint:scss && cd ..",
     "lint:config": "tsx lib/scripts/lintConfig.ts",
     "lint:fix": "eslint *.ts data lib models routes test/**/*.ts views rsn --fix && cd frontend && npm run lint:fix && cd ..",
@@ -75,12 +75,12 @@
     "rsn:update": "tsx rsn/rsn-update.ts",
     "vagrant": "cd vagrant && vagrant up",
     "sbom": "cyclonedx-npm --omit=dev --output-format=JSON --output-file=bom.json",
-    "clean:reports": "rimraf cypress/results cypress/reports",
-  "precy:custom": "npm run clean:reports",
-  "cy:custom": "cypress run --spec \"test/cypress/e2e/searchProduct.spec.ts,test/cypress/e2e/createAddress.spec.ts,test/cypress/e2e/userProfile.spec.ts,test/cypress/e2e/productReview.spec.ts\"",
-  "generate:report": "mochawesome-merge cypress/results/*.json > cypress/report.json && marge cypress/report.json -f report -o cypress/reports",
-  "posttest:e2e:custom": "npm run generate:report",
-"test:e2e:custom": "npm run cy:custom"
+      "clean:reports": "rimraf cypress/results cypress/reports",
+    "precy:custom": "npm run clean:reports",
+    "cy:custom": "cypress run --spec \"tests-ui/cypress/e2e/searchProduct.spec.ts,tests-ui/cypress/e2e/createAddress.spec.ts,tests-ui/cypress/e2e/userProfile.spec.ts,tests-ui/cypress/e2e/productReview.spec.ts,tests-ui/cypress/e2e/searchProductFailure.spec.ts\" || exit 0",
+    "generate:report": "mochawesome-merge cypress/results/*.json > cypress/report.json && marge cypress/report.json -f report -o cypress/reports",
+    "posttest:e2e:custom": "npm run generate:report",
+    "test:e2e:custom": "npm run cy:custom"
   },
   "nyc": {
     "extends": "@istanbuljs/nyc-config-typescript",

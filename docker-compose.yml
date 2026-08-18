@@ -47,6 +47,7 @@ services:
       - ./n8n_data:/home/node/.n8n
       - ./tests-api:/tests-api
       - ./n8n_npm_global:/home/node/.npm-global
+      - ./cypress:/cypress-data
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=admin
