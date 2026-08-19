@@ -1,0 +1,283 @@
+{
+  "name": "Newman - Juice Shop Tests",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        192
+      ],
+      "id": "bb7c3cfc-fe65-4e91-b4f7-5c79f5141d19",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "command": "cd /tests-api && NODE_NO_WARNINGS=1 /home/node/.npm-global/bin/newman run \"API Tests.postman_collection.json\" -e \"Dev - Juice Shop.postman_environment.json\" --env-var baseUrl=http://host.docker.internal:3000 --reporters json --reporter-json-export /tmp/results.json > /dev/null 2>&1 ; cat /tmp/results.json"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        48,
+        192
+      ],
+      "id": "c7ac1a05-da15-4373-8f1d-da60c005ce8e",
+      "name": "Execute Command  Newman",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "command": "cat /cypress-data/report.json"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        576,
+        192
+      ],
+      "id": "e42fc99a-8291-4952-ae14-c1046bde7579",
+      "name": "Execute Command  Cypress",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.stdout;\nconst report = JSON.parse(raw);\n\nreturn [{\n  json: {\n    totalTests: report.stats.tests,\n    passed: report.stats.passes,\n    failed: report.stats.failures,\n    passPercent: report.stats.passPercent,\n    duration: report.stats.duration,\n    startedAt: report.stats.start,\n    // On extrait uniquement les tests en échec avec leur message d'erreur,\n    // c'est ce qui nourrira le futur prompt d'analyse IA\n    failedTests: report.results.flatMap(file =>\n      file.suites.flatMap(suite =>\n        suite.tests\n          .filter(test => test.state === 'failed')\n          .map(test => ({\n            spec: file.file,\n            title: test.title,\n            errorMessage: test.err?.message || 'Erreur non spécifiée'\n          }))\n      )\n    )\n  }\n}];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        192
+      ],
+      "id": "a888bec8-b5e0-46e5-a189-3425930dbe39",
+      "name": "Json Cypress"
+    },
+    {
+      "parameters": {
+        "jsCode": "// On récupère le texte stdout généré par Newman\nconst output = $input.first().json.stdout;\n\n// On parse la chaîne JSON\nconst report = JSON.parse(output);\n\nconst assertions = report.run.stats.assertions;\nconst requests = report.run.stats.requests;\n\nreturn {\n  json: {\n    status: assertions.failed === 0 ? \"PASSED\" : \"FAILED\",\n    totalAssertions: assertions.total,\n    failedAssertions: assertions.failed,\n    passedAssertions: assertions.total - assertions.failed,\n    totalRequests: requests.total,\n    failedRequests: requests.failed,\n    durationMs: report.run.timings.completed - report.run.timings.started\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        192
+      ],
+      "id": "3ce0115b-5364-48de-b3f1-1865b05dc4d3",
+      "name": "Json Newman"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Récupération des données extraites des nœuds précédents\n// (Ajuste les noms de nœuds s'ils diffèrent dans ton workflow)\nconst cypressData = $(\"Json Cypress\").first().json;\nconst newmanData = $(\"Json Newman\").first().json;\n\n// 2. Extraction des échecs Cypress (UI)\nconst uiFailures = cypressData.failedTests || [];\nconst uiHasFailures = cypressData.failed > 0 || uiFailures.length > 0;\n\n// 3. Extraction des échecs Newman (API)\n// En fonction de la structure envoyée par Json Newman (ex: assertions échouées)\nconst apiFailures = newmanData.failedTests || newmanData.failures || [];\nconst apiHasFailures = (newmanData.failed > 0) || apiFailures.length > 0;\n\n// 4. Calcul du statut global\nconst hasFailures = uiHasFailures || apiHasFailures;\n\n// 5. Structure du JSON unifié transmis au nœud suivant (IF / OpenAI)\nreturn [{\n  json: {\n    hasFailures: hasFailures,\n    summary: {\n      totalApiFailed: newmanData.failed || apiFailures.length,\n      totalUiFailed: cypressData.failed || uiFailures.length,\n      executionDate: new Date().toISOString()\n    },\n    details: {\n      apiFailures: apiFailures,\n      uiFailures: uiFailures\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        192
+      ],
+      "id": "ff68a1e0-c941-46ff-874a-c9b12f05ad46",
+      "name": "Results echec JSON"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e28c3071-6826-45d7-99d0-4bedea39b617",
+              "leftValue": "={{ $json.hasFailures }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1280,
+        192
+      ],
+      "id": "8e465b7d-ba48-4bdd-97f4-436a91d94a96",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Tu es un expert QA et DevOps. Analyse les échecs de nos tests automatisés (Newman API et Cypress UI). Identifie la cause racine, indique si le problème provient du Backend ou du Frontend, et propose une solution corrective concise.",
+              "role": "model"
+            },
+            {
+              "content": "={{ JSON.stringify($json.details) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1504,
+        96
+      ],
+      "id": "55b94047-545e-4f57-8275-751970529d33",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "PPHV60QVltyEuWq2",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ $json.content.parts[0].text.substring(0, 1900) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        1872,
+        96
+      ],
+      "id": "289e34a3-d598-4916-ac5b-3aca0bb09501",
+      "name": "Discord",
+      "webhookId": "befab50f-b365-4ba0-85b5-1f0a17db6cc3",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "xTLaRuCeZw7nvkR1",
+          "name": "Discord Webhook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute Command  Newman",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command  Newman": {
+      "main": [
+        [
+          {
+            "node": "Json Newman",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Execute Command  Cypress": {
+      "main": [
+        [
+          {
+            "node": "Json Cypress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Json Newman": {
+      "main": [
+        [
+          {
+            "node": "Execute Command  Cypress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Json Cypress": {
+      "main": [
+        [
+          {
+            "node": "Results echec JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Results echec JSON": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0cac93a0-beff-4319-9050-9c67a8734949",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1c87358951f08b959234fe518c644e6923cdacf0693aae77cf049564a6187677"
+  },
+  "nodeGroups": [],
+  "id": "hgL0Ukrp8OCE8aH7",
+  "tags": []
+}

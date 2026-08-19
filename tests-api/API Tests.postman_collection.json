@@ -217,14 +217,14 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/Products/6",
+          "raw": "{{baseUrl}}/api/Products/14",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
             "Products",
-            "6"
+            "14"
           ]
         },
         "description": "StartFragmentRécupère les détails d'un produit via son ID. Réponse attendue : 200 OK, ou 404 si l'ID n'existe pas.EndFragment"
@@ -287,9 +287,26 @@
           "listen": "test",
           "script": {
             "exec": [
+              "if (pm.response.code === 200 || pm.response.code === 201) {\r",
+              "    const jsonData = pm.response.json();\r",
+              "    pm.environment.set(\"basketItemId\", jsonData.data.id);\r",
+              "}\r",
+              "\r",
               "pm.test(\"Status code is 200 or 201\", function () {\r",
               "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);\r",
               "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const randomProductId = Math.floor(Math.random() * 20) + 1; // ID entre 1 et 20\r",
+              "pm.environment.set(\"randomProductId\", randomProductId);"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -312,7 +329,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"ProductId\":14,\r\n  \"BasketId\": 1,\r\n  \"quantity\": 2\r\n}",
+          "raw": "{\r\n  \"ProductId\": {{randomProductId}},\r\n  \"BasketId\": 1,\r\n  \"quantity\": 2\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -374,14 +391,14 @@
           }
         },
         "url": {
-          "raw": "{{baseUrl}}/api/BasketItems/14",
+          "raw": "{{baseUrl}}/api/BasketItems/{{basketItemId}}",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
             "BasketItems",
-            "14"
+            "{{basketItemId}}"
           ]
         },
         "description": "StartFragmentModifie la quantité d'un item déjà présent dans le panier, via son ID. Nécessite `{{token}}`. Réponse attendue : 200 OK.EndFragment"
@@ -419,14 +436,14 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/BasketItems/14",
+          "raw": "{{baseUrl}}/api/BasketItems/{{basketItemId}}",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
             "BasketItems",
-            "14"
+            "{{basketItemId}}"
           ]
         },
         "description": "StartFragmentSupprime un item du panier via son ID. Nécessite `{{token}}`. Réponse attendue : 200/204.EndFragment"

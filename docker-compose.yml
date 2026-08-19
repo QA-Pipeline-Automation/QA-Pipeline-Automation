@@ -3,6 +3,23 @@ networks:
     driver: bridge
 
 services:
+  # Base de données pour l'historisation des exécutions du pipeline QA
+  postgres:
+    image: postgres:15-alpine
+    container_name: qa_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=qa_pipeline_db
+      - POSTGRES_USER=qa_user
+      - POSTGRES_PASSWORD=qa_password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - qa_network
+
+  # Serveur d'intégration continue
   jenkins:
     image: jenkins/jenkins:lts
     container_name: jenkins
@@ -17,20 +34,56 @@ services:
     networks:
       - qa_network
 
+  # Chef d'orchestration du pipeline QA
   n8n:
     image: n8nio/n8n:latest
+    container_name: qa_n8n
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "5678:5678"
     volumes:
       - ./n8n_data:/home/node/.n8n
+      - ./tests-api:/tests-api
+      - ./n8n_npm_global:/home/node/.npm-global
+      - ./cypress:/cypress-data
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=admin
       - N8N_BASIC_AUTH_PASSWORD=admin123
       - GENERIC_TIMEZONE=Africa/Casablanca
+      - NODES_EXCLUDE=[]
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=qa_pipeline_db
+      - DB_POSTGRESDB_USER=qa_user
+      - DB_POSTGRESDB_PASSWORD=qa_password123
+    depends_on:
+      - postgres
+    networks:
+      - qa_network
+
+  # Plateforme de visualisation / Dashboard QA
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: qa_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - postgres
     networks:
       - qa_network
 
 volumes:
   jenkins_home:
-  
+  postgres_data:
+  grafana_data:

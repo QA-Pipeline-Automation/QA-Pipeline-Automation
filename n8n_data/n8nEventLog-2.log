@@ -1,2 +1,0 @@
-{"__type":"$$EventMessageAudit","id":"bec4ba68-a30c-440c-920a-ebe139b907ab","ts":"2026-08-07T17:05:11.634+00:00","eventName":"n8n.audit.workflow.created","message":"n8n.audit.workflow.created","payload":{"userId":"d3acad94-6273-4ce3-850b-4e77274af2b9","_email":"projectpfa@outlook.com","_firstName":"pfa","_lastName":"project","globalRole":"global:owner","workflowId":"WBZe3fIhHo8Idb8v","workflowName":"My workflow"}}
-{"__type":"$$EventMessageConfirm","confirm":"bec4ba68-a30c-440c-920a-ebe139b907ab","ts":"2026-08-07T17:05:11.639+00:00","source":{"id":"0","name":"eventBus"}}

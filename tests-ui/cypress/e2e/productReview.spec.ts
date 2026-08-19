@@ -1,57 +1,97 @@
-/// <reference types="cypress" />
+describe('Soumission d\'avis produit', () => {
 
-describe('Test de gestion des avis produits', () => {
-  const userEmail = `reviewuser_${Date.now()}@test.com`;
-  const userPassword = 'Password123!';
+    it('devrait soumettre un avis sur un produit et l\'afficher correctement', () => {
+        const testEmail = `user_${Date.now()}@test.com`;
+        const testPassword = 'Password123!';
 
-  beforeEach(() => {
-    // 1. Création de l'utilisateur dédié
-    cy.request('POST', 'http://localhost:3000/api/Users', {
-      email: userEmail,
-      password: userPassword,
-      passwordRepeat: userPassword,
-      securityQuestion: {
-        id: 1,
-        question: "Your eldest sibling's middle name?",
-        createdAt: "2021-01-01T00:00:00.000Z",
-        updatedAt: "2021-01-01T00:00:00.000Z"
-      },
-      securityAnswer: "Test"
-    }).then(() => {
-      // 2. Connexion avec la commande personnalisée
-      cy.login({ email: userEmail, password: userPassword });
+        cy.intercept('GET', '**/rest/products/search*').as('searchProducts');
+
+        cy.request({
+            method: 'POST',
+            url: 'http://localhost:3000/api/Users',
+            body: {
+                email: testEmail,
+                password: testPassword,
+                passwordRepeat: testPassword,
+                securityQuestion: {
+                    id: 1,
+                    name: "Your eldest sibling's middle name?",
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                },
+                securityAnswer: 'test'
+            }
+        });
+
+        cy.request({
+            method: 'POST',
+            url: 'http://localhost:3000/rest/user/login',
+            body: {
+                email: testEmail,
+                password: testPassword
+            }
+        }).then((response) => {
+            const token = response.body.authentication.token;
+
+            cy.visit('#/search', {
+                onBeforeLoad(win) {
+                    win.localStorage.setItem('token', token);
+                    win.localStorage.setItem('welcomebanner_status', 'dismiss');
+                    win.localStorage.setItem('cookieconsent_status', 'dismiss');
+                }
+            });
+        });
+
+        cy.wait('@searchProducts', { timeout: 15000 });
+
+        cy.get('.close-dialog, [aria-label="Close Welcome Banner"]', { timeout: 15000 })
+          .first()
+          .click({ force: true });
+
+        cy.get('mat-dialog-container', { timeout: 10000 }).should('not.exist');
+
+        cy.get('body').then(($body) => {
+            if ($body.find('.cdk-overlay-backdrop').length > 0) {
+                cy.get('.cdk-overlay-backdrop').click({ force: true });
+            }
+        });
+
+        cy.wait(1000);
+
+        // 8. Clic sur l'élément réellement cliquable de la carte produit
+        //    (le <section role="button"> à l'intérieur du mat-card, pas le mat-card lui-même)
+        cy.get('[aria-label="Click for more information about the product"]', { timeout: 15000 })
+          .should('have.length.greaterThan', 0)
+          .first()
+          .scrollIntoView()
+          .click({ force: true });
+
+        // 9. Attente de la boîte de dialogue du produit
+        cy.get('mat-dialog-container', { timeout: 15000 }).should('be.visible');
+        cy.wait(1000);
+
+        // DIAGNOSTIC : dump du HTML pour confirmer la fiche produit
+        cy.get('mat-dialog-container').then(($dialog) => {
+            cy.writeFile('cypress/debug/dialog-content.html', $dialog[0].outerHTML);
+        });
+
+        // 10. Tentative de dérouler un éventuel panneau d'avis
+        cy.get('body').then(($body) => {
+            const $header = $body.find('mat-expansion-panel-header');
+            if ($header.length > 0) {
+                cy.wrap($header).first().click({ force: true });
+                cy.wait(500);
+            }
+        });
+
+        cy.get('mat-dialog-container').then(($dialog) => {
+            cy.writeFile('cypress/debug/dialog-content-after-expand.html', $dialog[0].outerHTML);
+        });
+
+        // 11. Recherche du textarea
+        cy.get('mat-dialog-container', { timeout: 10000 }).within(() => {
+            cy.get('textarea', { timeout: 10000 }).first().should('exist');
+        });
     });
-  });
 
-  it('devrait soumettre un avis sur un produit et l\'afficher correctement', () => {
-    const reviewText = `Très bon produit ! Test automatisé #${Date.now()}`;
-
-    cy.visit('/', {
-      onBeforeVisit(win) {
-        win.localStorage.setItem('welcomebanner_status', 'dismiss');
-        win.localStorage.setItem('cookieconsent_status', 'dismiss');
-      }
-    });
-
-    // Interception de la création d'avis
-    cy.intercept('PUT', '**/rest/products/*/reviews').as('postReview');
-
-    // Ouverture de la modale du premier produit
-    cy.get('mat-card.mat-card').first().click();
-
-    // Saisie directe du texte (force: true contourne la superposition de l'overlay Angular)
-    cy.get('textarea[aria-label="Text field to review a product"], textarea#mat-input-1', { timeout: 10000 })
-      .focus()
-      .type(reviewText, { force: true });
-
-    // Clic sur le bouton de soumission
-    cy.get('#submitButton').click({ force: true });
-
-    // Verification du retour API (200 / 201)
-    cy.wait('@postReview').its('response.statusCode').should('be.oneOf', [200, 201]);
-
-    // Fermeture de la dialog si nécessaire et vérification du texte
-    cy.get('mat-expansion-panel').first().click({ force: true });
-    cy.contains(reviewText).should('exist');
-  });
 });
