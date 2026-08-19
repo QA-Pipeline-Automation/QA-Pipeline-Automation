@@ -75,7 +75,7 @@
     "rsn:update": "tsx rsn/rsn-update.ts",
     "vagrant": "cd vagrant && vagrant up",
     "sbom": "cyclonedx-npm --omit=dev --output-format=JSON --output-file=bom.json",
-      "clean:reports": "rimraf cypress/results cypress/reports",
+    "clean:reports": "rimraf cypress/results cypress/reports",
     "precy:custom": "npm run clean:reports",
     "cy:custom": "cypress run --spec \"tests-ui/cypress/e2e/searchProduct.spec.ts,tests-ui/cypress/e2e/createAddress.spec.ts,tests-ui/cypress/e2e/userProfile.spec.ts,tests-ui/cypress/e2e/productReview.spec.ts,tests-ui/cypress/e2e/searchProductFailure.spec.ts\" || exit 0",
     "generate:report": "mochawesome-merge cypress/results/*.json > cypress/report.json && marge cypress/report.json -f report -o cypress/reports",

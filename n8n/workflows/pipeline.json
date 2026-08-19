@@ -1,0 +1,1038 @@
+{
+  "name": "pipeline-start",
+  "nodes": [
+    {
+      "parameters": {
+        "command": "cd /tests-api && NODE_NO_WARNINGS=1 /home/node/.npm-global/bin/newman run \"API Tests.postman_collection.json\" -e \"Dev - Juice Shop.postman_environment.json\" --env-var baseUrl=http://host.docker.internal:3000 --reporters json --reporter-json-export results.json > /dev/null 2>&1 ; cat results.json"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        96
+      ],
+      "id": "0ccb398f-e181-437e-8304-1e6aec49aa9a",
+      "name": "Execute Command  Newman",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "command": "node -e \"\nconst http = require('http');\nconst req = http.request({\n  hostname: 'qa_cypress',\n  port: 4000,\n  path: '/run-tests',\n  method: 'POST',\n  timeout: 600000\n}, (res) => {\n  let data = '';\n  res.on('data', chunk => data += chunk);\n  res.on('end', () => {\n    console.error('Status:', res.statusCode);\n    console.log(data);\n  });\n});\nreq.on('error', (e) => console.error('Error:', e.message));\nreq.on('timeout', () => { console.error('Timeout'); req.destroy(); });\nreq.end();\n\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        96
+      ],
+      "id": "73f65794-ee07-485a-8ce5-3c6e9b0f7188",
+      "name": "Execute Command  Cypress",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.stdout;\nconst report = JSON.parse(raw);\n\nreturn [{\n  json: {\n    totalTests: report.stats.tests,\n    passed: report.stats.passes,\n    failed: report.stats.failures,\n    passPercent: report.stats.passPercent,\n    duration: report.stats.duration,\n    startedAt: report.stats.start,\n    // On extrait uniquement les tests en échec avec leur message d'erreur,\n    // c'est ce qui nourrira le futur prompt d'analyse IA\n    failedTests: report.results.flatMap(file =>\n      file.suites.flatMap(suite =>\n        suite.tests\n          .filter(test => test.state === 'failed')\n          .map(test => ({\n            spec: file.file,\n            title: test.title,\n            errorMessage: test.err?.message || 'Erreur non spécifiée'\n          }))\n      )\n    )\n  }\n}];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        96
+      ],
+      "id": "3d8b6114-7f38-4884-a052-98f5310d054f",
+      "name": "Json Cypress"
+    },
+    {
+      "parameters": {
+        "jsCode": "// On récupère le texte stdout généré par Newman\nconst output = $input.first().json.stdout;\n\n// On parse la chaîne JSON\nconst report = JSON.parse(output);\n\nconst assertions = report.run.stats.assertions;\nconst requests = report.run.stats.requests;\n\nreturn {\n  json: {\n    status: assertions.failed === 0 ? \"PASSED\" : \"FAILED\",\n    totalAssertions: assertions.total,\n    failedAssertions: assertions.failed,\n    passedAssertions: assertions.total - assertions.failed,\n    totalRequests: requests.total,\n    failedRequests: requests.failed,\n    durationMs: report.run.timings.completed - report.run.timings.started\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1184,
+        96
+      ],
+      "id": "5235daad-32fd-4a2e-ace0-ca0816d8e4e3",
+      "name": "Json Newman"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Récupération des données extraites des nœuds précédents\n// (Ajuste les noms de nœuds s'ils diffèrent dans ton workflow)\nconst cypressData = $(\"Json Cypress\").first().json;\nconst newmanData = $(\"Json Newman\").first().json;\n\n// 2. Extraction des échecs Cypress (UI)\nconst uiFailures = cypressData.failedTests || [];\nconst uiHasFailures = cypressData.failed > 0 || uiFailures.length > 0;\n\n// 3. Extraction des échecs Newman (API)\n// En fonction de la structure envoyée par Json Newman (ex: assertions échouées)\nconst apiFailures = newmanData.failedTests || newmanData.failures || [];\nconst apiHasFailures = (newmanData.failed > 0) || apiFailures.length > 0;\n\n// 4. Calcul du statut global\nconst hasFailures = uiHasFailures || apiHasFailures;\n\n// 5. Structure du JSON unifié transmis au nœud suivant (IF / OpenAI)\nreturn [{\n  json: {\n    hasFailures: hasFailures,\n    summary: {\n      totalApiFailed: newmanData.failed || apiFailures.length,\n      totalUiFailed: cypressData.failed || uiFailures.length,\n      executionDate: new Date().toISOString()\n    },\n    details: {\n      apiFailures: apiFailures,\n      uiFailures: uiFailures\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        96
+      ],
+      "id": "3e0fd6e7-cdbc-4098-a1a7-b09daa56b9fc",
+      "name": "Results echec JSON"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Tu es un expert QA et DevOps. Analyse les échecs de nos tests automatisés (Newman API et Cypress UI). Identifie la cause racine, indique si le problème provient du Backend ou du Frontend, et propose une solution corrective concise.",
+              "role": "model"
+            },
+            {
+              "content": "={{ JSON.stringify($json.details) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6c02d02f-a973-4598-a1f3-9d773f6ff14f",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gqn3ZVWAmQAg8AM0",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ $('Message a model').item.json.content.parts[0].text.substring(0, 1900) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        512,
+        0
+      ],
+      "id": "b4d3f54b-2c74-4bf2-a9e8-840ef5c16556",
+      "name": "Discord",
+      "webhookId": "befab50f-b365-4ba0-85b5-1f0a17db6cc3",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "msvLq2MwBH6azkne",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "qa_pipeline_results",
+          "mode": "list",
+          "cachedResultName": "qa_pipeline_results"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "total_assertions": "={{ $('Json Newman').item.json.totalAssertions }}",
+            "failed_assertions": "={{ $('Json Newman').item.json.failedAssertions }}",
+            "total_requests": "={{ $('Json Newman').item.json.totalRequests }}",
+            "failed_requests": "={{ $('Json Newman').item.json.failedRequests }}",
+            "total_tests": "={{ $('Json Cypress').item.json.totalTests }}",
+            "passed_tests": "={{ $('Json Cypress').item.json.passed }}",
+            "failed_tests": "={{ $('Json Cypress').item.json.failed }}",
+            "pass_percent": "=\t{{ $('Json Cypress').item.json.passPercent }}",
+            "cypress_duration_ms": "={{ $('Json Cypress').item.json.duration }}",
+            "total_api_failed": "={{ $('Results echec JSON').item.json.summary.totalApiFailed }}",
+            "total_ui_failed": "={{ $('Results echec JSON').item.json.summary.totalUiFailed }}",
+            "build_number": "={{ \"manual-test\" }}",
+            "newman_status": "={{ $('Json Newman').item.json.status }}",
+            "cypress_status": "={{ $('Json Cypress').item.json.failed === 0 ? \"PASSED\" : \"FAILED\" }}",
+            "global_status": "={{ $('Results echec JSON').item.json.hasFailures ? \"FAILED\" : \"PASSED\" }}",
+            "newman_duration_ms": "={{ $('Json Newman').item.json.durationMs }}",
+            "ai_summary": "={{ $('Message a model').item.json.content.parts[0].text }}",
+            "newman_details": "={{ JSON.stringify($('Json Newman').item.json) }}",
+            "cypress_details": "={{ JSON.stringify($('Json Cypress').item.json) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "execution_date",
+              "displayName": "execution_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "build_number",
+              "displayName": "build_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "newman_status",
+              "displayName": "newman_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cypress_status",
+              "displayName": "cypress_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "global_status",
+              "displayName": "global_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "total_assertions",
+              "displayName": "total_assertions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "failed_assertions",
+              "displayName": "failed_assertions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "total_requests",
+              "displayName": "total_requests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "failed_requests",
+              "displayName": "failed_requests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "newman_duration_ms",
+              "displayName": "newman_duration_ms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "total_tests",
+              "displayName": "total_tests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "passed_tests",
+              "displayName": "passed_tests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "failed_tests",
+              "displayName": "failed_tests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "pass_percent",
+              "displayName": "pass_percent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cypress_duration_ms",
+              "displayName": "cypress_duration_ms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "total_api_failed",
+              "displayName": "total_api_failed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "total_ui_failed",
+              "displayName": "total_ui_failed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ai_summary",
+              "displayName": "ai_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "newman_details",
+              "displayName": "newman_details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cypress_details",
+              "displayName": "cypress_details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        352,
+        0
+      ],
+      "id": "c53f7362-82a8-4732-b053-feef910bd601",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "WlTRsbG2DT9cuEM5",
+          "name": "Postgres accountt"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public",
+          "cachedResultName": "public",
+          "cachedResultUrl": ""
+        },
+        "table": {
+          "__rl": true,
+          "value": "qa_pipeline_results",
+          "mode": "list",
+          "cachedResultName": "qa_pipeline_results"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "total_assertions": "={{ $('Json Newman').item.json.totalAssertions }}",
+            "failed_assertions": "={{ $('Json Newman').item.json.failedAssertions }}",
+            "total_requests": "={{ $('Json Newman').item.json.totalRequests }}",
+            "failed_requests": "={{ $('Json Newman').item.json.failedRequests }}",
+            "newman_duration_ms": "={{ $('Json Newman').item.json.durationMs }}",
+            "total_tests": "={{ $('Json Cypress').item.json.totalTests }}",
+            "passed_tests": "={{ $('Json Cypress').item.json.passed }}\n",
+            "failed_tests": "={{ $('Json Cypress').item.json.failed }}",
+            "pass_percent": "={{ $('Json Cypress').item.json.passPercent }}",
+            "cypress_duration_ms": "={{ $('Json Cypress').item.json.duration }}\n",
+            "total_api_failed": "={{ $('Results echec JSON').item.json.summary.totalApiFailed }}",
+            "total_ui_failed": "={{ $('Results echec JSON').item.json.summary.totalUiFailed }}",
+            "build_number": "={{ \"manual-test\" }}",
+            "newman_status": "={{ $('Json Newman').item.json.status }}",
+            "cypress_status": "={{ $('Json Cypress').item.json.failed === 0 ? \"PASSED\" : \"FAILED\" }}",
+            "global_status": "={{ $('Results echec JSON').item.json.hasFailures ? \"FAILED\" : \"PASSED\" }}",
+            "newman_details": "={{ JSON.stringify($('Json Newman').item.json) }}",
+            "ai_summary": "=",
+            "cypress_details": "={{ JSON.stringify($('Json Cypress').item.json) }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "execution_date",
+              "displayName": "execution_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "build_number",
+              "displayName": "build_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "newman_status",
+              "displayName": "newman_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cypress_status",
+              "displayName": "cypress_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "global_status",
+              "displayName": "global_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total_assertions",
+              "displayName": "total_assertions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "failed_assertions",
+              "displayName": "failed_assertions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total_requests",
+              "displayName": "total_requests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "failed_requests",
+              "displayName": "failed_requests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "newman_duration_ms",
+              "displayName": "newman_duration_ms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total_tests",
+              "displayName": "total_tests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "passed_tests",
+              "displayName": "passed_tests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "failed_tests",
+              "displayName": "failed_tests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pass_percent",
+              "displayName": "pass_percent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cypress_duration_ms",
+              "displayName": "cypress_duration_ms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total_api_failed",
+              "displayName": "total_api_failed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total_ui_failed",
+              "displayName": "total_ui_failed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ai_summary",
+              "displayName": "ai_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "newman_details",
+              "displayName": "newman_details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cypress_details",
+              "displayName": "cypress_details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        64,
+        256
+      ],
+      "id": "54d24efb-d528-4352-b578-0ca0656f3632",
+      "name": "Insert rows in a table1",
+      "credentials": {
+        "postgres": {
+          "id": "WlTRsbG2DT9cuEM5",
+          "name": "Postgres accountt"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "={{ \"✅ Pipeline QA réussi — build \" + $json.build_number + \"\\n\\n\" + \"Newman: \" + $json.newman_status + \" | Cypress: \" + $json.cypress_status + \"\\n\" + $json.total_tests + \" tests exécutés, \" + $json.passed_tests + \" réussis.\" }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        512,
+        256
+      ],
+      "id": "04a42de8-0eb4-4753-a448-bb7c7dbdddcd",
+      "name": "Discord1",
+      "webhookId": "547c23e6-9e2f-4754-92e9-c3e77e27397e",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "msvLq2MwBH6azkne",
+          "name": "Discord Webhook account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pipeline-start",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2928,
+        112
+      ],
+      "id": "b855e5ab-0e97-4c68-a70d-2793903b7e76",
+      "name": "Webhook",
+      "webhookId": "1d242add-bfb7-4e92-b7f5-410e84eb5bb7"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://jenkins:8080/job/QA-PAutomation-n8n/build",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "n8n-trigger-token"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -2672,
+        112
+      ],
+      "id": "8b46af76-1426-4ad4-8ec8-09a42c61ae40",
+      "name": "Start Jenkins Build",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "mXPE54aN6nP6Wj8U",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -2448,
+        112
+      ],
+      "id": "4dd9b5fc-f837-4cc6-8a3e-f7dff3665896",
+      "name": "Wait for Build",
+      "webhookId": "b9a22dc4-3632-4de4-9cd1-0b28b710d4aa"
+    },
+    {
+      "parameters": {
+        "url": "http://jenkins:8080/job/QA-PAutomation-n8n/lastBuild/api/json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -2224,
+        112
+      ],
+      "id": "94e45085-f47d-41be-91f1-f9ab9087fc0d",
+      "name": "Check Build Status",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "mXPE54aN6nP6Wj8U",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a5f8fc78-c9b5-4274-9072-e61896e0b207",
+              "leftValue": "={{ $json.result }}",
+              "rightValue": "SUCCESS",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2000,
+        112
+      ],
+      "id": "bf6803c1-3ce6-4852-99eb-c0a5c5195dd2",
+      "name": "Build Success?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e28c3071-6826-45d7-99d0-4bedea39b617",
+              "leftValue": "={{ $json.hasFailures }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        96
+      ],
+      "id": "f8efa516-b7dd-4c68-8d3a-c1411819c13f",
+      "name": "Test not ok?"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=🚨 *Build Failed*\n\n*Auteur:* {{$node[\"Check Build Status\"].json[\"culprits\"][0][\"fullName\"]}}\n*Commit:* {{$node[\"Check Build Status\"].json[\"changeSets\"][0][\"items\"][0][\"msg\"]}}\n*Commit ID:* {{$node[\"Check Build Status\"].json[\"changeSets\"][0][\"items\"][0][\"commitId\"]}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        -1728,
+        352
+      ],
+      "id": "1fdaeef8-3903-4aa6-85ef-60b469eb891a",
+      "name": "Echec build",
+      "webhookId": "4ef7ee7b-2e35-43ec-a7ba-c7127bd6e4a8",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "msvLq2MwBH6azkne",
+          "name": "Discord Webhook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute Command  Newman": {
+      "main": [
+        [
+          {
+            "node": "Json Newman",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command  Cypress": {
+      "main": [
+        [
+          {
+            "node": "Json Cypress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Json Newman": {
+      "main": [
+        [
+          {
+            "node": "Execute Command  Cypress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Json Cypress": {
+      "main": [
+        [
+          {
+            "node": "Results echec JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Results echec JSON": {
+      "main": [
+        [
+          {
+            "node": "Test not ok?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table1": {
+      "main": [
+        [
+          {
+            "node": "Discord1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Start Jenkins Build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Jenkins Build": {
+      "main": [
+        [
+          {
+            "node": "Wait for Build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Build": {
+      "main": [
+        [
+          {
+            "node": "Check Build Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Build Status": {
+      "main": [
+        [
+          {
+            "node": "Build Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Success?": {
+      "main": [
+        [
+          {
+            "node": "Execute Command  Newman",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Echec build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test not ok?": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert rows in a table1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1582ccce-378d-419a-b005-be1ca061b681",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c178ceaa3cf42247d87c536efd7136dad67d8d702f533b582b42bbc675984307"
+  },
+  "nodeGroups": [],
+  "id": "ipTQvEEvjb2UKSSr",
+  "tags": []
+}

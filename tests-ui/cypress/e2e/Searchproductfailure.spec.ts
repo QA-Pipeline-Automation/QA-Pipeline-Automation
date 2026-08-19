@@ -17,7 +17,7 @@ describe('Fonctionnalité de recherche - cas échec', () => {
         // Inscription via l'API
         cy.request({
             method: 'POST',
-            url: 'http://localhost:3000/api/Users',
+            url: `${Cypress.config('baseUrl')}/api/Users`,
             body: {
                 email: testEmail,
                 password: testPassword,
@@ -35,7 +35,7 @@ describe('Fonctionnalité de recherche - cas échec', () => {
         // Connexion API directe
         cy.request({
             method: 'POST',
-            url: 'http://localhost:3000/rest/user/login',
+            url: `${Cypress.config('baseUrl')}/rest/user/login`,
             body: {
                 email: testEmail,
                 password: testPassword
@@ -54,7 +54,6 @@ describe('Fonctionnalité de recherche - cas échec', () => {
 
         cy.wait('@searchProducts', { timeout: 15000 });
 
-        // Fermeture explicite de la bannière de bienvenue si elle apparaît
         cy.get('.close-dialog, [aria-label="Close Welcome Banner"]', { timeout: 15000 })
             .first()
             .click({ force: true });
@@ -67,7 +66,6 @@ describe('Fonctionnalité de recherche - cas échec', () => {
             }
         });
 
-        // Recherche du produit "Apple"
         cy.get('mat-icon').contains('search').click({ force: true });
         cy.get('#searchQuery input')
             .should('exist')
@@ -75,8 +73,6 @@ describe('Fonctionnalité de recherche - cas échec', () => {
 
         cy.url().should('include', '/#/search?q=Apple');
 
-        // Assertion volontairement fausse : ce produit n'existe pas
-        // => provoque un échec attendu et documenté
         cy.get('.mat-card', { timeout: 10000 })
             .contains('Unicorn Juice')
             .should('be.visible');

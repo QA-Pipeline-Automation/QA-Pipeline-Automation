@@ -8,7 +8,7 @@ describe('Soumission d\'avis produit', () => {
 
         cy.request({
             method: 'POST',
-            url: 'http://localhost:3000/api/Users',
+            url: `${Cypress.config('baseUrl')}/api/Users`,
             body: {
                 email: testEmail,
                 password: testPassword,
@@ -25,7 +25,7 @@ describe('Soumission d\'avis produit', () => {
 
         cy.request({
             method: 'POST',
-            url: 'http://localhost:3000/rest/user/login',
+            url: `${Cypress.config('baseUrl')}/rest/user/login`,
             body: {
                 email: testEmail,
                 password: testPassword
@@ -58,24 +58,19 @@ describe('Soumission d\'avis produit', () => {
 
         cy.wait(1000);
 
-        // 8. Clic sur l'élément réellement cliquable de la carte produit
-        //    (le <section role="button"> à l'intérieur du mat-card, pas le mat-card lui-même)
         cy.get('[aria-label="Click for more information about the product"]', { timeout: 15000 })
           .should('have.length.greaterThan', 0)
           .first()
           .scrollIntoView()
           .click({ force: true });
 
-        // 9. Attente de la boîte de dialogue du produit
         cy.get('mat-dialog-container', { timeout: 15000 }).should('be.visible');
         cy.wait(1000);
 
-        // DIAGNOSTIC : dump du HTML pour confirmer la fiche produit
         cy.get('mat-dialog-container').then(($dialog) => {
             cy.writeFile('cypress/debug/dialog-content.html', $dialog[0].outerHTML);
         });
 
-        // 10. Tentative de dérouler un éventuel panneau d'avis
         cy.get('body').then(($body) => {
             const $header = $body.find('mat-expansion-panel-header');
             if ($header.length > 0) {
@@ -88,7 +83,6 @@ describe('Soumission d\'avis produit', () => {
             cy.writeFile('cypress/debug/dialog-content-after-expand.html', $dialog[0].outerHTML);
         });
 
-        // 11. Recherche du textarea
         cy.get('mat-dialog-container', { timeout: 10000 }).within(() => {
             cy.get('textarea', { timeout: 10000 }).first().should('exist');
         });

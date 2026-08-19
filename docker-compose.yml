@@ -18,6 +18,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - qa_network
+  
 
   # Serveur d'intégration continue
   jenkins:
@@ -34,8 +35,24 @@ services:
     networks:
       - qa_network
 
+  cypress:
+    image: cypress/included:15.21.0
+    container_name: qa_cypress
+    working_dir: /project
+    volumes:
+      - .:/project
+      - /project/node_modules
+    environment:
+      - CYPRESS_baseUrl=http://host.docker.internal:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    entrypoint: sh -c "cd /project && npm install && node cypress-runner.js"
+    networks:
+      - qa_network
+
   # Chef d'orchestration du pipeline QA
   n8n:
+    user: root
     image: n8nio/n8n:latest
     container_name: qa_n8n
     restart: unless-stopped
@@ -44,10 +61,12 @@ services:
     ports:
       - "5678:5678"
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./n8n_data:/home/node/.n8n
       - ./tests-api:/tests-api
       - ./n8n_npm_global:/home/node/.npm-global
       - ./cypress:/cypress-data
+      - .:/project
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=admin
@@ -71,7 +90,7 @@ services:
     container_name: qa_grafana
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin123
@@ -83,7 +102,9 @@ services:
     networks:
       - qa_network
 
+
 volumes:
   jenkins_home:
   postgres_data:
   grafana_data:
+  pgadmin_data:

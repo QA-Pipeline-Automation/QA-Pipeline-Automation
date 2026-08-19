@@ -1,0 +1,109 @@
+{
+  "stats": {
+    "suites": 1,
+    "tests": 1,
+    "passes": 0,
+    "pending": 0,
+    "failures": 1,
+    "start": "2026-08-19T17:17:53.452Z",
+    "end": "2026-08-19T17:18:28.516Z",
+    "duration": 35064,
+    "testsRegistered": 1,
+    "passPercent": 0,
+    "pendingPercent": 0,
+    "other": 0,
+    "hasOther": false,
+    "skipped": 0,
+    "hasSkipped": false
+  },
+  "results": [
+    {
+      "uuid": "6ea4041d-0c5b-4701-9f6a-5ce00b8c5874",
+      "title": "",
+      "fullFile": "tests-ui/cypress/e2e/Searchproductfailure.spec.ts",
+      "file": "tests-ui/cypress/e2e/Searchproductfailure.spec.ts",
+      "beforeHooks": [],
+      "afterHooks": [],
+      "tests": [],
+      "suites": [
+        {
+          "uuid": "39056476-d600-4d9a-9ef5-1ff2e3bee59b",
+          "title": "Fonctionnalité de recherche - cas échec",
+          "fullFile": "",
+          "file": "",
+          "beforeHooks": [],
+          "afterHooks": [],
+          "tests": [
+            {
+              "title": "devrait échouer car le produit recherché n'existe pas dans le catalogue",
+              "fullTitle": "Fonctionnalité de recherche - cas échec devrait échouer car le produit recherché n'existe pas dans le catalogue",
+              "timedOut": null,
+              "duration": 11353,
+              "state": "failed",
+              "speed": null,
+              "pass": false,
+              "fail": true,
+              "pending": false,
+              "context": null,
+              "code": "const testEmail = `user_${Date.now()}@test.com`;\nconst testPassword = 'Password123!';\ncy.intercept('GET', '**/rest/products/search*').as('searchProducts');\n// Inscription via l'API\ncy.request({\n    method: 'POST',\n    url: `${Cypress.config('baseUrl')}/api/Users`,\n    body: {\n        email: testEmail,\n        password: testPassword,\n        passwordRepeat: testPassword,\n        securityQuestion: {\n            id: 1,\n            name: \"Your eldest sibling's middle name?\",\n            createdAt: new Date().toISOString(),\n            updatedAt: new Date().toISOString()\n        },\n        securityAnswer: 'test'\n    }\n});\n// Connexion API directe\ncy.request({\n    method: 'POST',\n    url: `${Cypress.config('baseUrl')}/rest/user/login`,\n    body: {\n        email: testEmail,\n        password: testPassword\n    }\n}).then((response) => {\n    const token = response.body.authentication.token;\n    cy.visit('#/search', {\n        onBeforeLoad(win) {\n            win.localStorage.setItem('token', token);\n            win.localStorage.setItem('welcomebanner_status', 'dismiss');\n            win.localStorage.setItem('cookieconsent_status', 'dismiss');\n        }\n    });\n});\ncy.wait('@searchProducts', { timeout: 15000 });\ncy.get('.close-dialog, [aria-label=\"Close Welcome Banner\"]', { timeout: 15000 })\n    .first()\n    .click({ force: true });\ncy.get('mat-dialog-container', { timeout: 10000 }).should('not.exist');\ncy.get('body').then(($body) => {\n    if ($body.find('.cdk-overlay-backdrop').length > 0) {\n        cy.get('.cdk-overlay-backdrop').click({ force: true });\n    }\n});\ncy.get('mat-icon').contains('search').click({ force: true });\ncy.get('#searchQuery input')\n    .should('exist')\n    .type('Apple{enter}', { force: true });\ncy.url().should('include', '/#/search?q=Apple');\ncy.get('.mat-card', { timeout: 10000 })\n    .contains('Unicorn Juice')\n    .should('be.visible');",
+              "err": {
+                "message": "AssertionError: Timed out retrying after 10000ms: Expected to find content: 'Unicorn Juice' within the element: <mat-card.mat-mdc-card.mdc-card.mat-card.mat-mdc-card-outlined.mdc-card--outlined> but never did.",
+                "estack": "AssertionError: Timed out retrying after 10000ms: Expected to find content: 'Unicorn Juice' within the element: <mat-card.mat-mdc-card.mdc-card.mat-card.mat-mdc-card-outlined.mdc-card--outlined> but never did.\n    at Context.eval (webpack://juice-shop/./tests-ui/cypress/e2e/Searchproductfailure.spec.ts:78:13)",
+                "diff": null
+              },
+              "uuid": "73efbc13-2f25-40a3-b798-7d7d694df3ee",
+              "parentUUID": "39056476-d600-4d9a-9ef5-1ff2e3bee59b",
+              "isHook": false,
+              "skipped": false
+            }
+          ],
+          "suites": [],
+          "passes": [],
+          "failures": [
+            "73efbc13-2f25-40a3-b798-7d7d694df3ee"
+          ],
+          "pending": [],
+          "skipped": [],
+          "duration": 11353,
+          "root": false,
+          "rootEmpty": false,
+          "_timeout": 2000
+        }
+      ],
+      "passes": [],
+      "failures": [],
+      "pending": [],
+      "skipped": [],
+      "duration": 0,
+      "root": true,
+      "rootEmpty": true,
+      "_timeout": 2000
+    }
+  ],
+  "meta": {
+    "mocha": {
+      "version": "7.2.0"
+    },
+    "mochawesome": {
+      "options": {
+        "quiet": false,
+        "reportFilename": "mochawesome",
+        "saveHtml": false,
+        "saveJson": true,
+        "consoleReporter": "spec",
+        "useInlineDiffs": false,
+        "code": true
+      },
+      "version": "8.0.1"
+    },
+    "marge": {
+      "options": {
+        "reportDir": "cypress/results",
+        "overwrite": false,
+        "html": false,
+        "json": true
+      },
+      "version": "6.3.2"
+    }
+  }
+}

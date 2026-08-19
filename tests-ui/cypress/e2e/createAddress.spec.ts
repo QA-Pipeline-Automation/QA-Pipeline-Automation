@@ -9,7 +9,7 @@ describe('Test de création d\'adresse de livraison', () => {
     authToken = '';
 
     // 1. Création d'un utilisateur de test via l'API
-    cy.request('POST', 'http://localhost:3000/api/Users', {
+    cy.request('POST', `${Cypress.config('baseUrl')}/api/Users`, {
       email: userEmail,
       password: userPassword,
       passwordRepeat: userPassword,
@@ -22,7 +22,7 @@ describe('Test de création d\'adresse de livraison', () => {
       securityAnswer: "Test"
     }).then(() => {
       // 2. Connexion pour récupérer le token JWT
-      cy.request('POST', 'http://localhost:3000/rest/user/login', {
+      cy.request('POST', `${Cypress.config('baseUrl')}/rest/user/login`, {
         email: userEmail,
         password: userPassword
       }).then((response) => {
@@ -31,7 +31,7 @@ describe('Test de création d\'adresse de livraison', () => {
     });
 
     // 3. Navigation vers la page de création d'adresse en injectant les cookies / tokens
-    cy.visit('http://localhost:3000/#/address/create', {
+    cy.visit('/#/address/create', {
       onBeforeLoad(win) {
         win.localStorage.setItem('welcomebanner_status', 'dismiss');
         win.localStorage.setItem('cookieconsent_status', 'dismiss');
@@ -74,7 +74,7 @@ describe('Test de création d\'adresse de livraison', () => {
     cy.wait('@createAddress').its('response.statusCode').should('eq', 201);
 
     // Vérification que l'adresse apparaît dans la liste des adresses sauvegardées
-    cy.visit('http://localhost:3000/#/address/saved');
+    cy.visit('/#/address/saved');
     cy.get('mat-table, mat-card', { timeout: 10000 })
       .should('contain', '123 Rue de la Paix');
   });

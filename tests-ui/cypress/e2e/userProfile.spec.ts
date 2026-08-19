@@ -8,7 +8,7 @@ describe('Test de gestion du profil utilisateur', () => {
     const userPassword = 'Password123!';
     authToken = '';
 
-    cy.request('POST', 'http://localhost:3000/api/Users', {
+    cy.request('POST', `${Cypress.config('baseUrl')}/api/Users`, {
       email: userEmail,
       password: userPassword,
       passwordRepeat: userPassword,
@@ -20,7 +20,7 @@ describe('Test de gestion du profil utilisateur', () => {
       },
       securityAnswer: "Test"
     }).then(() => {
-      cy.request('POST', 'http://localhost:3000/rest/user/login', {
+      cy.request('POST', `${Cypress.config('baseUrl')}/rest/user/login`, {
         email: userEmail,
         password: userPassword
       }).then((response) => {
