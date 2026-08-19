@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "pipeline-start",
+        "path": "github-webhook",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
@@ -20,8 +20,12 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://jenkins:8080/job/QA-PAutomation-n8n/build",
-        "options": {}
+        "url": "http://host.docker.internal:8080/job/QA-Pipeline/build?token=jenkins-trigger",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "timeout": 60000
+        }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
@@ -30,11 +34,21 @@
         0
       ],
       "id": "c00cbfc8-7e9b-47de-8d81-33d0aee33820",
-      "name": "Start Jenkins Build"
+      "name": "Start Jenkins Build",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "notesInFlow": false,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "7daHisb49iKjsAnU",
+          "name": "Unnamed credential"
+        }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
-        "amount": 15
+        "amount": 20
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
@@ -48,8 +62,12 @@
     },
     {
       "parameters": {
-        "url": "http://jenkins:8080/lastBuild/api/json",
-        "options": {}
+        "url": "http://host.docker.internal:8080/job/QA-Pipeline/lastCompletedBuild/api/json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {
+          "timeout": 60000
+        }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
@@ -58,7 +76,16 @@
         0
       ],
       "id": "02a57ac3-56e2-4f53-a517-75be155b4feb",
-      "name": "Check Build Status"
+      "name": "Check Build Status",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "7daHisb49iKjsAnU",
+          "name": "Unnamed credential"
+        }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -123,7 +150,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://runner-api:5000/newman/run",
+        "url": "http://host.docker.internal:5000/newman/run",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -361,6 +388,7 @@
           "mode": "list",
           "value": ""
         },
+        "message": "pipeline terminé avec succès",
         "options": {}
       },
       "type": "n8n-nodes-base.microsoftTeams",
@@ -507,11 +535,11 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "37539501-c223-4421-93a1-f169c5f7b186",
+  "versionId": "64b7a387-f7e5-4d6f-bf50-b0f9e92846e1",
   "meta": {
     "instanceId": "7f102619c3a859f89ae30d98f23dd16e938dc6ca78c529bfde7daf2f86846465"
   },
   "nodeGroups": [],
   "id": "fgnMu64Yqn9WEx6L",
   "tags": []
-}
+}
