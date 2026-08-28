@@ -1,0 +1,105 @@
+{
+  "stats": {
+    "suites": 1,
+    "tests": 1,
+    "passes": 1,
+    "pending": 0,
+    "failures": 0,
+    "start": "2026-08-28T12:48:31.655Z",
+    "end": "2026-08-28T12:48:33.136Z",
+    "duration": 1481,
+    "testsRegistered": 1,
+    "passPercent": 100,
+    "pendingPercent": 0,
+    "other": 0,
+    "hasOther": false,
+    "skipped": 0,
+    "hasSkipped": false
+  },
+  "results": [
+    {
+      "uuid": "a55990f5-c78f-4b7d-ad99-703c941810dd",
+      "title": "",
+      "fullFile": "tests-ui/cypress/e2e/userProfile.spec.ts",
+      "file": "tests-ui/cypress/e2e/userProfile.spec.ts",
+      "beforeHooks": [],
+      "afterHooks": [],
+      "tests": [],
+      "suites": [
+        {
+          "uuid": "853b9427-4388-4a29-8c8d-4ec9126064b3",
+          "title": "Test de gestion du profil utilisateur",
+          "fullFile": "",
+          "file": "",
+          "beforeHooks": [],
+          "afterHooks": [],
+          "tests": [
+            {
+              "title": "devrait modifier le nom d'utilisateur (username) avec succès",
+              "fullTitle": "Test de gestion du profil utilisateur devrait modifier le nom d'utilisateur (username) avec succès",
+              "timedOut": null,
+              "duration": 1430,
+              "state": "passed",
+              "speed": "fast",
+              "pass": true,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "const newUsername = `AutomationUser_${Math.floor(Math.random() * 1000)}`;\ncy.visit('/profile');\ncy.get('#username', { timeout: 10000 }).clear().type(newUsername);\ncy.get('#submit').click();\ncy.visit('/profile');\ncy.get('#username').should('have.value', newUsername);",
+              "err": {},
+              "uuid": "f827ac70-d641-413a-a52c-e6cef9b869d9",
+              "parentUUID": "853b9427-4388-4a29-8c8d-4ec9126064b3",
+              "isHook": false,
+              "skipped": false
+            }
+          ],
+          "suites": [],
+          "passes": [
+            "f827ac70-d641-413a-a52c-e6cef9b869d9"
+          ],
+          "failures": [],
+          "pending": [],
+          "skipped": [],
+          "duration": 1430,
+          "root": false,
+          "rootEmpty": false,
+          "_timeout": 2000
+        }
+      ],
+      "passes": [],
+      "failures": [],
+      "pending": [],
+      "skipped": [],
+      "duration": 0,
+      "root": true,
+      "rootEmpty": true,
+      "_timeout": 2000
+    }
+  ],
+  "meta": {
+    "mocha": {
+      "version": "7.2.0"
+    },
+    "mochawesome": {
+      "options": {
+        "quiet": false,
+        "reportFilename": "mochawesome",
+        "saveHtml": false,
+        "saveJson": true,
+        "consoleReporter": "spec",
+        "useInlineDiffs": false,
+        "code": true
+      },
+      "version": "8.0.1"
+    },
+    "marge": {
+      "options": {
+        "reportDir": "cypress/results",
+        "overwrite": false,
+        "html": false,
+        "json": true
+      },
+      "version": "6.3.2"
+    }
+  }
+}

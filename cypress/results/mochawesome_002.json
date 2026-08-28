@@ -1,0 +1,105 @@
+{
+  "stats": {
+    "suites": 1,
+    "tests": 1,
+    "passes": 1,
+    "pending": 0,
+    "failures": 0,
+    "start": "2026-08-28T12:48:23.019Z",
+    "end": "2026-08-28T12:48:27.228Z",
+    "duration": 4209,
+    "testsRegistered": 1,
+    "passPercent": 100,
+    "pendingPercent": 0,
+    "other": 0,
+    "hasOther": false,
+    "skipped": 0,
+    "hasSkipped": false
+  },
+  "results": [
+    {
+      "uuid": "c9aba51e-279d-4b44-9d12-de9a04f462cc",
+      "title": "",
+      "fullFile": "tests-ui/cypress/e2e/productReview.spec.ts",
+      "file": "tests-ui/cypress/e2e/productReview.spec.ts",
+      "beforeHooks": [],
+      "afterHooks": [],
+      "tests": [],
+      "suites": [
+        {
+          "uuid": "991d333f-65ec-4b62-a11a-2260e433dd98",
+          "title": "Soumission d'avis produit",
+          "fullFile": "",
+          "file": "",
+          "beforeHooks": [],
+          "afterHooks": [],
+          "tests": [
+            {
+              "title": "devrait soumettre un avis sur un produit et l'afficher correctement",
+              "fullTitle": "Soumission d'avis produit devrait soumettre un avis sur un produit et l'afficher correctement",
+              "timedOut": null,
+              "duration": 4144,
+              "state": "passed",
+              "speed": "fast",
+              "pass": true,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "const testEmail = `user_${Date.now()}@test.com`;\nconst testPassword = 'Password123!';\ncy.intercept('GET', '**/rest/products/search*').as('searchProducts');\ncy.request({\n    method: 'POST',\n    url: `${Cypress.config('baseUrl')}/api/Users`,\n    body: {\n        email: testEmail,\n        password: testPassword,\n        passwordRepeat: testPassword,\n        securityQuestion: {\n            id: 1,\n            name: \"Your eldest sibling's middle name?\",\n            createdAt: new Date().toISOString(),\n            updatedAt: new Date().toISOString()\n        },\n        securityAnswer: 'test'\n    }\n});\ncy.request({\n    method: 'POST',\n    url: `${Cypress.config('baseUrl')}/rest/user/login`,\n    body: {\n        email: testEmail,\n        password: testPassword\n    }\n}).then((response) => {\n    const token = response.body.authentication.token;\n    cy.visit('#/search', {\n        onBeforeLoad(win) {\n            win.localStorage.setItem('token', token);\n            win.localStorage.setItem('welcomebanner_status', 'dismiss');\n            win.localStorage.setItem('cookieconsent_status', 'dismiss');\n        }\n    });\n});\ncy.wait('@searchProducts', { timeout: 15000 });\ncy.get('.close-dialog, [aria-label=\"Close Welcome Banner\"]', { timeout: 15000 })\n    .first()\n    .click({ force: true });\ncy.get('mat-dialog-container', { timeout: 10000 }).should('not.exist');\ncy.get('body').then(($body) => {\n    if ($body.find('.cdk-overlay-backdrop').length > 0) {\n        cy.get('.cdk-overlay-backdrop').click({ force: true });\n    }\n});\ncy.wait(1000);\ncy.get('[aria-label=\"Click for more information about the product\"]', { timeout: 15000 })\n    .should('have.length.greaterThan', 0)\n    .first()\n    .scrollIntoView()\n    .click({ force: true });\ncy.get('mat-dialog-container', { timeout: 15000 }).should('be.visible');\ncy.wait(1000);\ncy.get('mat-dialog-container').then(($dialog) => {\n    cy.writeFile('cypress/debug/dialog-content.html', $dialog[0].outerHTML);\n});\ncy.get('body').then(($body) => {\n    const $header = $body.find('mat-expansion-panel-header');\n    if ($header.length > 0) {\n        cy.wrap($header).first().click({ force: true });\n        cy.wait(500);\n    }\n});\ncy.get('mat-dialog-container').then(($dialog) => {\n    cy.writeFile('cypress/debug/dialog-content-after-expand.html', $dialog[0].outerHTML);\n});\ncy.get('mat-dialog-container', { timeout: 10000 }).within(() => {\n    cy.get('textarea', { timeout: 10000 }).first().should('exist');\n});",
+              "err": {},
+              "uuid": "01060e2b-db4f-4d43-8ee9-5c5c4930c8a8",
+              "parentUUID": "991d333f-65ec-4b62-a11a-2260e433dd98",
+              "isHook": false,
+              "skipped": false
+            }
+          ],
+          "suites": [],
+          "passes": [
+            "01060e2b-db4f-4d43-8ee9-5c5c4930c8a8"
+          ],
+          "failures": [],
+          "pending": [],
+          "skipped": [],
+          "duration": 4144,
+          "root": false,
+          "rootEmpty": false,
+          "_timeout": 2000
+        }
+      ],
+      "passes": [],
+      "failures": [],
+      "pending": [],
+      "skipped": [],
+      "duration": 0,
+      "root": true,
+      "rootEmpty": true,
+      "_timeout": 2000
+    }
+  ],
+  "meta": {
+    "mocha": {
+      "version": "7.2.0"
+    },
+    "mochawesome": {
+      "options": {
+        "quiet": false,
+        "reportFilename": "mochawesome",
+        "saveHtml": false,
+        "saveJson": true,
+        "consoleReporter": "spec",
+        "useInlineDiffs": false,
+        "code": true
+      },
+      "version": "8.0.1"
+    },
+    "marge": {
+      "options": {
+        "reportDir": "cypress/results",
+        "overwrite": false,
+        "html": false,
+        "json": true
+      },
+      "version": "6.3.2"
+    }
+  }
+}

@@ -12,13 +12,13 @@
     "hasOther": false,
     "skipped": 0,
     "hasSkipped": false,
-    "start": "2026-08-19T17:17:53.452Z",
-    "end": "2026-08-19T17:19:01.358Z",
-    "duration": 67906
+    "start": "2026-08-28T12:47:41.393Z",
+    "end": "2026-08-28T12:48:33.136Z",
+    "duration": 51743
   },
   "results": [
     {
-      "uuid": "6ea4041d-0c5b-4701-9f6a-5ce00b8c5874",
+      "uuid": "cce845b6-3087-4f9e-bf8e-faba2c4d532f",
       "title": "",
       "fullFile": "tests-ui/cypress/e2e/Searchproductfailure.spec.ts",
       "file": "tests-ui/cypress/e2e/Searchproductfailure.spec.ts",
@@ -27,7 +27,7 @@
       "tests": [],
       "suites": [
         {
-          "uuid": "39056476-d600-4d9a-9ef5-1ff2e3bee59b",
+          "uuid": "e99f1620-e2fa-4ab5-8806-98d32641f1a8",
           "title": "Fonctionnalité de recherche - cas échec",
           "fullFile": "",
           "file": "",
@@ -38,7 +38,7 @@
               "title": "devrait échouer car le produit recherché n'existe pas dans le catalogue",
               "fullTitle": "Fonctionnalité de recherche - cas échec devrait échouer car le produit recherché n'existe pas dans le catalogue",
               "timedOut": null,
-              "duration": 11353,
+              "duration": 11336,
               "state": "failed",
               "speed": null,
               "pass": false,
@@ -51,8 +51,8 @@
                 "estack": "AssertionError: Timed out retrying after 10000ms: Expected to find content: 'Unicorn Juice' within the element: <mat-card.mat-mdc-card.mdc-card.mat-card.mat-mdc-card-outlined.mdc-card--outlined> but never did.\n    at Context.eval (webpack://juice-shop/./tests-ui/cypress/e2e/Searchproductfailure.spec.ts:78:13)",
                 "diff": null
               },
-              "uuid": "73efbc13-2f25-40a3-b798-7d7d694df3ee",
-              "parentUUID": "39056476-d600-4d9a-9ef5-1ff2e3bee59b",
+              "uuid": "98902543-eb49-44ca-953b-dbb97220177d",
+              "parentUUID": "e99f1620-e2fa-4ab5-8806-98d32641f1a8",
               "isHook": false,
               "skipped": false
             }
@@ -60,11 +60,11 @@
           "suites": [],
           "passes": [],
           "failures": [
-            "73efbc13-2f25-40a3-b798-7d7d694df3ee"
+            "98902543-eb49-44ca-953b-dbb97220177d"
           ],
           "pending": [],
           "skipped": [],
-          "duration": 11353,
+          "duration": 11336,
           "root": false,
           "rootEmpty": false,
           "_timeout": 2000
@@ -80,7 +80,7 @@
       "_timeout": 2000
     },
     {
-      "uuid": "bc4dc130-7661-42c4-9b2c-900a17ec9bed",
+      "uuid": "13427086-188b-4f97-971b-90fdf7bc89f8",
       "title": "",
       "fullFile": "tests-ui/cypress/e2e/createAddress.spec.ts",
       "file": "tests-ui/cypress/e2e/createAddress.spec.ts",
@@ -89,7 +89,7 @@
       "tests": [],
       "suites": [
         {
-          "uuid": "b6a99859-ace0-4fe3-b63b-c2b81a47aab8",
+          "uuid": "9ffc5a23-e5dc-4e0e-b097-4918c35b0ebe",
           "title": "Test de création d'adresse de livraison",
           "fullFile": "",
           "file": "",
@@ -100,7 +100,7 @@
               "title": "devrait permettre de créer une nouvelle adresse de livraison",
               "fullTitle": "Test de création d'adresse de livraison devrait permettre de créer une nouvelle adresse de livraison",
               "timedOut": null,
-              "duration": 3040,
+              "duration": 3761,
               "state": "passed",
               "speed": "fast",
               "pass": true,
@@ -109,20 +109,20 @@
               "context": null,
               "code": "cy.intercept('POST', '**/api/Addresss*').as('createAddress');\n// Saisie dans tous les champs du formulaire avec force: true\ncy.get('input[placeholder*=\"country\"]').type('France', { force: true });\ncy.get('input[placeholder*=\"name\"]').type('Jean Dupont', { force: true });\ncy.get('input[placeholder*=\"mobile\"]').type('0601020304', { force: true });\ncy.get('input[placeholder*=\"ZIP\"]').type('75001', { force: true });\ncy.get('textarea[placeholder*=\"address\"]').type('123 Rue de la Paix', { force: true });\ncy.get('input[placeholder*=\"city\"]').type('Paris', { force: true });\ncy.get('input[placeholder*=\"state\"]').type('Île-de-France', { force: true });\n// Soumission du formulaire\ncy.get('#submitButton').click({ force: true });\n// Attente de la requête API et vérification du statut 201 Created\ncy.wait('@createAddress').its('response.statusCode').should('eq', 201);\n// Vérification que l'adresse apparaît dans la liste des adresses sauvegardées\ncy.visit('/#/address/saved');\ncy.get('mat-table, mat-card', { timeout: 10000 })\n    .should('contain', '123 Rue de la Paix');",
               "err": {},
-              "uuid": "6b17d1d3-3fb1-4687-b4c7-4798e6bd7d3e",
-              "parentUUID": "b6a99859-ace0-4fe3-b63b-c2b81a47aab8",
+              "uuid": "8b2ced8e-ed5f-4c20-95ae-18821ea33613",
+              "parentUUID": "9ffc5a23-e5dc-4e0e-b097-4918c35b0ebe",
               "isHook": false,
               "skipped": false
             }
           ],
           "suites": [],
           "passes": [
-            "6b17d1d3-3fb1-4687-b4c7-4798e6bd7d3e"
+            "8b2ced8e-ed5f-4c20-95ae-18821ea33613"
           ],
           "failures": [],
           "pending": [],
           "skipped": [],
-          "duration": 3040,
+          "duration": 3761,
           "root": false,
           "rootEmpty": false,
           "_timeout": 2000
@@ -138,7 +138,7 @@
       "_timeout": 2000
     },
     {
-      "uuid": "f37ded05-20d4-48a9-a1a3-94bc597a7a2a",
+      "uuid": "c9aba51e-279d-4b44-9d12-de9a04f462cc",
       "title": "",
       "fullFile": "tests-ui/cypress/e2e/productReview.spec.ts",
       "file": "tests-ui/cypress/e2e/productReview.spec.ts",
@@ -147,7 +147,7 @@
       "tests": [],
       "suites": [
         {
-          "uuid": "ae0e53c8-7253-4f0e-9ec9-67f208bd8b88",
+          "uuid": "991d333f-65ec-4b62-a11a-2260e433dd98",
           "title": "Soumission d'avis produit",
           "fullFile": "",
           "file": "",
@@ -158,7 +158,7 @@
               "title": "devrait soumettre un avis sur un produit et l'afficher correctement",
               "fullTitle": "Soumission d'avis produit devrait soumettre un avis sur un produit et l'afficher correctement",
               "timedOut": null,
-              "duration": 4371,
+              "duration": 4144,
               "state": "passed",
               "speed": "fast",
               "pass": true,
@@ -167,20 +167,20 @@
               "context": null,
               "code": "const testEmail = `user_${Date.now()}@test.com`;\nconst testPassword = 'Password123!';\ncy.intercept('GET', '**/rest/products/search*').as('searchProducts');\ncy.request({\n    method: 'POST',\n    url: `${Cypress.config('baseUrl')}/api/Users`,\n    body: {\n        email: testEmail,\n        password: testPassword,\n        passwordRepeat: testPassword,\n        securityQuestion: {\n            id: 1,\n            name: \"Your eldest sibling's middle name?\",\n            createdAt: new Date().toISOString(),\n            updatedAt: new Date().toISOString()\n        },\n        securityAnswer: 'test'\n    }\n});\ncy.request({\n    method: 'POST',\n    url: `${Cypress.config('baseUrl')}/rest/user/login`,\n    body: {\n        email: testEmail,\n        password: testPassword\n    }\n}).then((response) => {\n    const token = response.body.authentication.token;\n    cy.visit('#/search', {\n        onBeforeLoad(win) {\n            win.localStorage.setItem('token', token);\n            win.localStorage.setItem('welcomebanner_status', 'dismiss');\n            win.localStorage.setItem('cookieconsent_status', 'dismiss');\n        }\n    });\n});\ncy.wait('@searchProducts', { timeout: 15000 });\ncy.get('.close-dialog, [aria-label=\"Close Welcome Banner\"]', { timeout: 15000 })\n    .first()\n    .click({ force: true });\ncy.get('mat-dialog-container', { timeout: 10000 }).should('not.exist');\ncy.get('body').then(($body) => {\n    if ($body.find('.cdk-overlay-backdrop').length > 0) {\n        cy.get('.cdk-overlay-backdrop').click({ force: true });\n    }\n});\ncy.wait(1000);\ncy.get('[aria-label=\"Click for more information about the product\"]', { timeout: 15000 })\n    .should('have.length.greaterThan', 0)\n    .first()\n    .scrollIntoView()\n    .click({ force: true });\ncy.get('mat-dialog-container', { timeout: 15000 }).should('be.visible');\ncy.wait(1000);\ncy.get('mat-dialog-container').then(($dialog) => {\n    cy.writeFile('cypress/debug/dialog-content.html', $dialog[0].outerHTML);\n});\ncy.get('body').then(($body) => {\n    const $header = $body.find('mat-expansion-panel-header');\n    if ($header.length > 0) {\n        cy.wrap($header).first().click({ force: true });\n        cy.wait(500);\n    }\n});\ncy.get('mat-dialog-container').then(($dialog) => {\n    cy.writeFile('cypress/debug/dialog-content-after-expand.html', $dialog[0].outerHTML);\n});\ncy.get('mat-dialog-container', { timeout: 10000 }).within(() => {\n    cy.get('textarea', { timeout: 10000 }).first().should('exist');\n});",
               "err": {},
-              "uuid": "d5cb51b0-5a2b-46bc-adc1-a27f923c7d1e",
-              "parentUUID": "ae0e53c8-7253-4f0e-9ec9-67f208bd8b88",
+              "uuid": "01060e2b-db4f-4d43-8ee9-5c5c4930c8a8",
+              "parentUUID": "991d333f-65ec-4b62-a11a-2260e433dd98",
               "isHook": false,
               "skipped": false
             }
           ],
           "suites": [],
           "passes": [
-            "d5cb51b0-5a2b-46bc-adc1-a27f923c7d1e"
+            "01060e2b-db4f-4d43-8ee9-5c5c4930c8a8"
           ],
           "failures": [],
           "pending": [],
           "skipped": [],
-          "duration": 4371,
+          "duration": 4144,
           "root": false,
           "rootEmpty": false,
           "_timeout": 2000
@@ -196,7 +196,7 @@
       "_timeout": 2000
     },
     {
-      "uuid": "fffc372c-4540-4b7e-aa02-dd847ef503fe",
+      "uuid": "86ee39b3-a190-4a8c-901b-419ae50782cf",
       "title": "",
       "fullFile": "tests-ui/cypress/e2e/searchProduct.spec.ts",
       "file": "tests-ui/cypress/e2e/searchProduct.spec.ts",
@@ -205,7 +205,7 @@
       "tests": [],
       "suites": [
         {
-          "uuid": "5fe97517-df56-4c1b-ab0b-6ec4402a03fc",
+          "uuid": "a2fad030-19bf-4cdc-872d-aaff424c815b",
           "title": "Fonctionnalité de recherche",
           "fullFile": "",
           "file": "",
@@ -216,7 +216,7 @@
               "title": "devrait rechercher et afficher un produit spécifique dans le catalogue",
               "fullTitle": "Fonctionnalité de recherche devrait rechercher et afficher un produit spécifique dans le catalogue",
               "timedOut": null,
-              "duration": 2045,
+              "duration": 1513,
               "state": "passed",
               "speed": "fast",
               "pass": true,
@@ -225,20 +225,20 @@
               "context": null,
               "code": "// Clic pour ouvrir la barre de recherche\ncy.get('mat-icon').contains('search').click({ force: true });\n// Saisie forcée en cas de délai d'animation CSS\ncy.get('#searchQuery input')\n    .should('exist')\n    .type('Apple{enter}', { force: true });\ncy.url().should('include', '/#/search?q=Apple');\ncy.get('.mat-card').contains('Apple Juice').should('be.visible');",
               "err": {},
-              "uuid": "b17acd17-b5bd-4f62-8637-85f5c54a5306",
-              "parentUUID": "5fe97517-df56-4c1b-ab0b-6ec4402a03fc",
+              "uuid": "6b792d69-6aa7-47ae-92d2-ed41252c19ad",
+              "parentUUID": "a2fad030-19bf-4cdc-872d-aaff424c815b",
               "isHook": false,
               "skipped": false
             }
           ],
           "suites": [],
           "passes": [
-            "b17acd17-b5bd-4f62-8637-85f5c54a5306"
+            "6b792d69-6aa7-47ae-92d2-ed41252c19ad"
           ],
           "failures": [],
           "pending": [],
           "skipped": [],
-          "duration": 2045,
+          "duration": 1513,
           "root": false,
           "rootEmpty": false,
           "_timeout": 2000
@@ -254,7 +254,7 @@
       "_timeout": 2000
     },
     {
-      "uuid": "0ee71745-bbb0-43a5-95d8-4eec11d78366",
+      "uuid": "a55990f5-c78f-4b7d-ad99-703c941810dd",
       "title": "",
       "fullFile": "tests-ui/cypress/e2e/userProfile.spec.ts",
       "file": "tests-ui/cypress/e2e/userProfile.spec.ts",
@@ -263,7 +263,7 @@
       "tests": [],
       "suites": [
         {
-          "uuid": "3cb9f396-1043-4c35-94bb-0b87e2f7d110",
+          "uuid": "853b9427-4388-4a29-8c8d-4ec9126064b3",
           "title": "Test de gestion du profil utilisateur",
           "fullFile": "",
           "file": "",
@@ -274,7 +274,7 @@
               "title": "devrait modifier le nom d'utilisateur (username) avec succès",
               "fullTitle": "Test de gestion du profil utilisateur devrait modifier le nom d'utilisateur (username) avec succès",
               "timedOut": null,
-              "duration": 2047,
+              "duration": 1430,
               "state": "passed",
               "speed": "fast",
               "pass": true,
@@ -283,20 +283,20 @@
               "context": null,
               "code": "const newUsername = `AutomationUser_${Math.floor(Math.random() * 1000)}`;\ncy.visit('/profile');\ncy.get('#username', { timeout: 10000 }).clear().type(newUsername);\ncy.get('#submit').click();\ncy.visit('/profile');\ncy.get('#username').should('have.value', newUsername);",
               "err": {},
-              "uuid": "4419cf5d-00a4-4f5b-8e10-0c02e1db485f",
-              "parentUUID": "3cb9f396-1043-4c35-94bb-0b87e2f7d110",
+              "uuid": "f827ac70-d641-413a-a52c-e6cef9b869d9",
+              "parentUUID": "853b9427-4388-4a29-8c8d-4ec9126064b3",
               "isHook": false,
               "skipped": false
             }
           ],
           "suites": [],
           "passes": [
-            "4419cf5d-00a4-4f5b-8e10-0c02e1db485f"
+            "f827ac70-d641-413a-a52c-e6cef9b869d9"
           ],
           "failures": [],
           "pending": [],
           "skipped": [],
-          "duration": 2047,
+          "duration": 1430,
           "root": false,
           "rootEmpty": false,
           "_timeout": 2000

@@ -5,9 +5,9 @@
     "passes": 0,
     "pending": 0,
     "failures": 1,
-    "start": "2026-08-19T17:17:53.452Z",
-    "end": "2026-08-19T17:18:28.516Z",
-    "duration": 35064,
+    "start": "2026-08-28T12:47:41.393Z",
+    "end": "2026-08-28T12:48:16.178Z",
+    "duration": 34785,
     "testsRegistered": 1,
     "passPercent": 0,
     "pendingPercent": 0,
@@ -18,7 +18,7 @@
   },
   "results": [
     {
-      "uuid": "6ea4041d-0c5b-4701-9f6a-5ce00b8c5874",
+      "uuid": "cce845b6-3087-4f9e-bf8e-faba2c4d532f",
       "title": "",
       "fullFile": "tests-ui/cypress/e2e/Searchproductfailure.spec.ts",
       "file": "tests-ui/cypress/e2e/Searchproductfailure.spec.ts",
@@ -27,7 +27,7 @@
       "tests": [],
       "suites": [
         {
-          "uuid": "39056476-d600-4d9a-9ef5-1ff2e3bee59b",
+          "uuid": "e99f1620-e2fa-4ab5-8806-98d32641f1a8",
           "title": "Fonctionnalité de recherche - cas échec",
           "fullFile": "",
           "file": "",
@@ -38,7 +38,7 @@
               "title": "devrait échouer car le produit recherché n'existe pas dans le catalogue",
               "fullTitle": "Fonctionnalité de recherche - cas échec devrait échouer car le produit recherché n'existe pas dans le catalogue",
               "timedOut": null,
-              "duration": 11353,
+              "duration": 11336,
               "state": "failed",
               "speed": null,
               "pass": false,
@@ -51,8 +51,8 @@
                 "estack": "AssertionError: Timed out retrying after 10000ms: Expected to find content: 'Unicorn Juice' within the element: <mat-card.mat-mdc-card.mdc-card.mat-card.mat-mdc-card-outlined.mdc-card--outlined> but never did.\n    at Context.eval (webpack://juice-shop/./tests-ui/cypress/e2e/Searchproductfailure.spec.ts:78:13)",
                 "diff": null
               },
-              "uuid": "73efbc13-2f25-40a3-b798-7d7d694df3ee",
-              "parentUUID": "39056476-d600-4d9a-9ef5-1ff2e3bee59b",
+              "uuid": "98902543-eb49-44ca-953b-dbb97220177d",
+              "parentUUID": "e99f1620-e2fa-4ab5-8806-98d32641f1a8",
               "isHook": false,
               "skipped": false
             }
@@ -60,11 +60,11 @@
           "suites": [],
           "passes": [],
           "failures": [
-            "73efbc13-2f25-40a3-b798-7d7d694df3ee"
+            "98902543-eb49-44ca-953b-dbb97220177d"
           ],
           "pending": [],
           "skipped": [],
-          "duration": 11353,
+          "duration": 11336,
           "root": false,
           "rootEmpty": false,
           "_timeout": 2000

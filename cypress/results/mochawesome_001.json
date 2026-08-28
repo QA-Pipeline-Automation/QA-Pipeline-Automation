@@ -5,9 +5,9 @@
     "passes": 1,
     "pending": 0,
     "failures": 0,
-    "start": "2026-08-19T17:18:30.160Z",
-    "end": "2026-08-19T17:18:47.236Z",
-    "duration": 17076,
+    "start": "2026-08-28T12:48:17.734Z",
+    "end": "2026-08-28T12:48:21.607Z",
+    "duration": 3873,
     "testsRegistered": 1,
     "passPercent": 100,
     "pendingPercent": 0,
@@ -18,7 +18,7 @@
   },
   "results": [
     {
-      "uuid": "bc4dc130-7661-42c4-9b2c-900a17ec9bed",
+      "uuid": "13427086-188b-4f97-971b-90fdf7bc89f8",
       "title": "",
       "fullFile": "tests-ui/cypress/e2e/createAddress.spec.ts",
       "file": "tests-ui/cypress/e2e/createAddress.spec.ts",
@@ -27,7 +27,7 @@
       "tests": [],
       "suites": [
         {
-          "uuid": "b6a99859-ace0-4fe3-b63b-c2b81a47aab8",
+          "uuid": "9ffc5a23-e5dc-4e0e-b097-4918c35b0ebe",
           "title": "Test de création d'adresse de livraison",
           "fullFile": "",
           "file": "",
@@ -38,7 +38,7 @@
               "title": "devrait permettre de créer une nouvelle adresse de livraison",
               "fullTitle": "Test de création d'adresse de livraison devrait permettre de créer une nouvelle adresse de livraison",
               "timedOut": null,
-              "duration": 3040,
+              "duration": 3761,
               "state": "passed",
               "speed": "fast",
               "pass": true,
@@ -47,20 +47,20 @@
               "context": null,
               "code": "cy.intercept('POST', '**/api/Addresss*').as('createAddress');\n// Saisie dans tous les champs du formulaire avec force: true\ncy.get('input[placeholder*=\"country\"]').type('France', { force: true });\ncy.get('input[placeholder*=\"name\"]').type('Jean Dupont', { force: true });\ncy.get('input[placeholder*=\"mobile\"]').type('0601020304', { force: true });\ncy.get('input[placeholder*=\"ZIP\"]').type('75001', { force: true });\ncy.get('textarea[placeholder*=\"address\"]').type('123 Rue de la Paix', { force: true });\ncy.get('input[placeholder*=\"city\"]').type('Paris', { force: true });\ncy.get('input[placeholder*=\"state\"]').type('Île-de-France', { force: true });\n// Soumission du formulaire\ncy.get('#submitButton').click({ force: true });\n// Attente de la requête API et vérification du statut 201 Created\ncy.wait('@createAddress').its('response.statusCode').should('eq', 201);\n// Vérification que l'adresse apparaît dans la liste des adresses sauvegardées\ncy.visit('/#/address/saved');\ncy.get('mat-table, mat-card', { timeout: 10000 })\n    .should('contain', '123 Rue de la Paix');",
               "err": {},
-              "uuid": "6b17d1d3-3fb1-4687-b4c7-4798e6bd7d3e",
-              "parentUUID": "b6a99859-ace0-4fe3-b63b-c2b81a47aab8",
+              "uuid": "8b2ced8e-ed5f-4c20-95ae-18821ea33613",
+              "parentUUID": "9ffc5a23-e5dc-4e0e-b097-4918c35b0ebe",
               "isHook": false,
               "skipped": false
             }
           ],
           "suites": [],
           "passes": [
-            "6b17d1d3-3fb1-4687-b4c7-4798e6bd7d3e"
+            "8b2ced8e-ed5f-4c20-95ae-18821ea33613"
           ],
           "failures": [],
           "pending": [],
           "skipped": [],
-          "duration": 3040,
+          "duration": 3761,
           "root": false,
           "rootEmpty": false,
           "_timeout": 2000
