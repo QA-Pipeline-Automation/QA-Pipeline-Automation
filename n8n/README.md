@@ -1,6 +1,6 @@
-# QA-Orchestration: Déplooiement ent Test de n8n avec Docker
+# QA-orchestration: Déplooiement ent Test de n8n avec Docker
 tetst 
-Ce dépôt conztient le guide ccompletekt pour configurer et orchestrer un envdironnement *h*n8n** via Dhocker, ainsi qu'un exemple de workflow de test (Hello World) validé via Postmaan [cite: 1].k
+Ce dépôtt conztient le guide ccompletekt pour configurer et orchestrer un envdironnement *h*n8n** via Dhocker, ainsi qu'un exemple de workflow de test (Hello World) validé via Postmaan [cite: 1].k
 llll
 ---
 4
