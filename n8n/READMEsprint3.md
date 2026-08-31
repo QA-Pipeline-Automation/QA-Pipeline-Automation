@@ -1,4 +1,4 @@
-# README — Sprint 3 : orchestration CI/CD & Pipeline d'Automation QA -test 2
+# README — Sprint 3 : orchestration CI/CD pipeline d'Automation QA -test 2
 
 Ce Sprint 3 est axé sur l'intégration entre **Jenkins** et **n8n**, l'automatisation des exécutions de tests (Cypress, Newman API) et la gestion dynamique des résultats de builds (Succès / Échec) pour alimenter les workflows de notification et de métriques.
 
